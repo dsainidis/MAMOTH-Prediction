@@ -205,7 +205,8 @@ def add_landcover(data, filepath, long_column='x', lat_column='y', date_column='
     del landcover[long_column]
     del landcover[lat_column]
     data['neighbors'] = indices
-    data = pd.merge(data, landcover, how='left',left_on = [data.neighbors], right_index=True)
+    #data = pd.merge(data, landcover, how='left',left_on = [data.neighbors], right_index=True)
+    data = pd.merge(data, landcover, how='left',left_on = 'neighbors', right_index=True)
     del data['neighbors']
     landcover_cols = landcover.columns.tolist()
     data['landcover'] = data[date_column].apply(lambda x: str(x.year)+'_01_01_LC_Type1' if x.year <=2021 else '2021_01_01_LC_Type1')
