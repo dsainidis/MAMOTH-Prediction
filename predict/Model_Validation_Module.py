@@ -276,7 +276,7 @@ def error_cdf(actual,prediction, case=''):
     plt.show()
 
 # %%
-def metrics(train, test, threshold=3):
+def metrics(train, test, threshold):
     """Calculates the perfomance of the model on train and test set
     Parameters
     --------
@@ -305,7 +305,7 @@ def metrics(train, test, threshold=3):
     print('max prediction:',max(test['prediction']))
 
 # %%
-def validation(train, test, model_type, case=''):
+def validation(train, test, model_type, error_buffer, case=''):
     """Prints plots about the performance of the model on the test set
     
     Parameters
@@ -320,10 +320,10 @@ def validation(train, test, model_type, case=''):
         Title of the plot (default= '')
     """
     if model_type != 'mosquito_regression':
-        metrics(train, test)
+        metrics(train, test, threshold=error_buffer)
         plot_error_per_class(test, case)
     else:
-        metrics(train, test, threshold=30)
+        metrics(train, test, threshold=error_buffer)
         plot_error_per_group(test['actual'],test['prediction'], case)
         error_cdf(test['actual'],test['prediction'], case)
     scatter_plot_error(test['actual'],test['prediction'], case)
@@ -491,7 +491,7 @@ def give_predictions_nn(model, train, test, env, filepath, date_col='dt_placemen
     return output
 
 # %%
-def evaluate_xgboost(model, train, test = None, date_col = 'dt_placement', filepath='', case = '', fi = False):
+def evaluate_xgboost(model, train, test = None, date_col = 'dt_placement', filepath='', case = '', fi = False, error_buffer=3):
     """Trains a model on random splitted data
     
     Parameters
@@ -542,7 +542,7 @@ def evaluate_xgboost(model, train, test = None, date_col = 'dt_placement', filep
     
     test = test.rename(columns={mosq_col:'actual'})
     
-    validation(results_train, test, model_type=model.model_type, case=case)
+    validation(results_train, test, model_type=model.model_type, case=case, error_buffer=error_buffer)
 
 # %%
 def give_predictions_xgboost(model, train, test, env, filepath, fi=False, date_col='dt_placement', case='',export=False):
