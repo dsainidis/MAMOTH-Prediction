@@ -38,7 +38,7 @@ def vectorise(target,num):
 
 # %%
 def transformations_nn(data, model_type, test=None, evaluation=False, transformation_list=['scaling'],
-                    embedding_data=None):
+                    embedding_data=None, test_size=0.2):
     """Executes scaling, augmentation or label endconding on the dataset 
     
     Parameters
@@ -85,7 +85,7 @@ def transformations_nn(data, model_type, test=None, evaluation=False, transforma
 
     if test is None:    
         X, y = data.iloc[:,:-1], data.iloc[:,-1]
-        train_X,test_X,train_y,test_y = train_test_split(X, y, test_size=0.20, random_state=1)
+        train_X,test_X,train_y,test_y = train_test_split(X, y, test_size=test_size, random_state=1)
     else:
         data = data.sample(frac=1,random_state=1).reset_index(drop=True)
         train_X, train_y = data.iloc[:,:-1], data.iloc[:,-1]
@@ -97,7 +97,7 @@ def transformations_nn(data, model_type, test=None, evaluation=False, transforma
     test_y = test_y.reset_index(drop=True)
         
     if evaluation:
-        train_X,eval_X,train_y,eval_y = train_test_split(train_X, train_y, test_size=0.20, random_state=1)
+        train_X,eval_X,train_y,eval_y = train_test_split(train_X, train_y, test_size=test_size, random_state=1)
         eval_X = eval_X.reset_index(drop=True)
         eval_y = eval_y.reset_index(drop=True)
         
@@ -178,9 +178,15 @@ def transformations_nn(data, model_type, test=None, evaluation=False, transforma
 
             
     if evaluation:
-        return train_X, train_y, eval_X, eval_y, test_X, test_y
-    else:       
-        return train_X, train_y, test_X, test_y
+        if 'scaling' in transformation_list:
+            return train_X, train_y, eval_X, eval_y, test_X, test_y, scaler
+        else:
+            return train_X, train_y, eval_X, eval_y, test_X, test_y
+    else:
+        if 'scaling' in transformation_list:
+            return train_X, train_y, test_X, test_y, scaler
+        else:          
+            return train_X, train_y, test_X, test_y
 
 # %%
 class Dataset(Dataset):

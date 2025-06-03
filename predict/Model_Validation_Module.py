@@ -332,7 +332,7 @@ def validation(train, test, model_type, error_buffer, case=''):
     plot_error_per_month(test, case)
 
 # %%
-def evaluate_nn(model, train, test=None, filepath = '', date_col = 'dt_placement', fi=False, case=''):
+def evaluate_nn(model, train, test=None, test_size = 0.2, filepath = '', date_col = 'dt_placement', fi=False, case='', error_buffer=3):
     
     if test is None:
         train, test = train_test_split(train, test_size=0.2, random_state=3)
@@ -357,15 +357,19 @@ def evaluate_nn(model, train, test=None, filepath = '', date_col = 'dt_placement
         else:
             features = train.columns[:-1].tolist()
     
-    train_X, train_y, test_X, test_y = transformations_nn(train, test = test, model_type = model.model_type, 
+    if 'scaling' in model.transformation_list:
+        train_X, train_y, test_X, test_y, fitted_scaler = transformations_nn(train, test = test, model_type = model.model_type, 
                                                        embedding_data = model.embedding_data,
-                                                       transformation_list = model.transformation_list)
-
+                                                       transformation_list = model.transformation_list, test_size=test_size)
+    else:
+        train_X, train_y, test_X, test_y = transformations_nn(train, test = test, model_type = model.model_type, 
+                                                       embedding_data = model.embedding_data,
+                                                       transformation_list = model.transformation_list, test_size=test_size)
     training_set = Dataset(train_X, train_y)
 
     testing_set = Dataset(test_X, test_y)
 
-    results_train, results_test, _ = train_nn(model = model_int, train_set = training_set, test_set = testing_set,
+    results_train, results_test, trained_model = train_nn(model = model_int, train_set = training_set, test_set = testing_set,
                                features=features, max_val = max_val)
     
 
@@ -378,8 +382,12 @@ def evaluate_nn(model, train, test=None, filepath = '', date_col = 'dt_placement
     
     test = test.rename(columns={mosq_col:'actual'})
 
-    validation(results_train, test, model_type=model.model_type, case=case)
+    validation(results_train, test, model_type=model.model_type, case=case, error_buffer=error_buffer)
 
+    if 'scaling' in model.transformation_list:
+        return fitted_scaler, trained_model
+    else:
+        return None, trained_model
 # %%
 def give_predictions_nn(model, train, test, env, filepath, date_col='dt_placement', case='', fi=False, export=False):
     """ Trainning of the model
@@ -452,7 +460,12 @@ def give_predictions_nn(model, train, test, env, filepath, date_col='dt_placemen
     
     model_int = copy.deepcopy(model)
     
-    train_X, train_y, test_X, test_y = transformations_nn(train, test = test, model_type = model.model_type, 
+    if 'scaling' in model.transformation_list:
+        train_X, train_y, test_X, test_y, fitted_scaler = transformations_nn(train, test = test, model_type = model.model_type, 
+                                                       embedding_data = model.embedding_data,
+                                                       transformation_list = model.transformation_list)
+    else:
+        train_X, train_y, test_X, test_y = transformations_nn(train, test = test, model_type = model.model_type, 
                                                        embedding_data = model.embedding_data,
                                                        transformation_list = model.transformation_list)
 
